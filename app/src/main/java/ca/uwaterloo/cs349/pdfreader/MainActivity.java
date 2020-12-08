@@ -33,6 +33,8 @@ import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
+    private Model model;
+
     final String LOGNAME = "pdf_viewer";
     final String FILENAME = "shannon1948.pdf";
     final int FILERESID = R.raw.shannon1948;
@@ -82,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        model = new Model();
+
         WindowManager wm = (WindowManager) this.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         DisplayMetrics metrics = new DisplayMetrics();
@@ -91,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
         layout = findViewById(R.id.pdfLayout);
 
-        pageImage = new PDFimage(this);
+        pageImage = new PDFimage(this, model);
         layout.addView(pageImage);
         layout.setEnabled(true);
         pageImage.setMinimumWidth(screenwidth);
@@ -105,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         // it will be displayed as an image in the pageImage (above)
         try {
             openRenderer(this);
-            showPage(pageImage.getPageindex());
+            showPage(model.getPageCounter());
         } catch (IOException exception) {
             Log.d(LOGNAME, "Error opening PDF");
         }
@@ -115,7 +119,10 @@ public class MainActivity extends AppCompatActivity {
         titleView = findViewById(R.id.title);
         titleView.setText(FILENAME);
         pageView = findViewById(R.id.page);
-        pageView.setText((pageImage.getPageindex() + 1) + "/" + pdfRenderer.getPageCount());
+        pageView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
+
+        model.setPagesAmount(pdfRenderer.getPageCount());
+        model.initObservers();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -159,19 +166,17 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             if (System.currentTimeMillis() - startTime > MINSCROLLTIME) {
                 if (distanceY > MINSCROLLDISTANCE) {
-                    if (pageImage.getPageindex() + 1 < pdfRenderer.getPageCount()) {
-                        pageImage.nextPage();
-                        showPage(pageImage.getPageindex());
-                    }
+                    model.incrementPageCounter();
+                    showPage(model.getPageCounter());
                     startTime = System.currentTimeMillis();
                     scrolled = true;
                 } else if (distanceY < -MINSCROLLDISTANCE) {
-                    pageImage.prevPage();
-                    showPage(pageImage.getPageindex());
+                    model.decrementPageCounter();
+                    showPage(model.getPageCounter());
                     startTime = System.currentTimeMillis();
                     scrolled = true;
                 }
-                pageView.setText((pageImage.getPageindex() + 1) + "/" + pdfRenderer.getPageCount());
+                pageView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
             }
             return true;
         }
@@ -182,31 +187,31 @@ public class MainActivity extends AppCompatActivity {
         drawbutton.setTextColor(off);
         highlightbutton.setTextColor(off);
         erasebutton.setTextColor(off);
-        if (pageImage.isFocused())
+        if (model.getMode() != Model.Mode.READ)
             ((Button) view).setTextColor(on);
     }
 
     public void draw(View view){
-        pageImage.drawClicked();
+        model.switchMode(Model.Mode.DRAW);
         switchButtons(view);
     }
 
     public void highlight(View view){
-        pageImage.highlightClicked();
+        model.switchMode(Model.Mode.HIGHLIGHT);
         switchButtons(view);
     }
 
     public void erase(View view){
-        pageImage.eraseClicked();
+        model.switchMode(Model.Mode.ERASE);
         switchButtons(view);
     }
 
     public void undo(View view){
-        pageImage.undoClicked();
+        model.undoClicked();
     }
 
     public void redo(View view){
-        pageImage.redoClicked();
+        model.redoClicked();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

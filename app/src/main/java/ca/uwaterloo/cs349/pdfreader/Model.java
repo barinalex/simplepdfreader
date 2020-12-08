@@ -1,8 +1,21 @@
 package ca.uwaterloo.cs349.pdfreader;
 
+import android.graphics.Path;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+
+import ca.uwaterloo.cs349.pdfreader.Actions.Action;
+import ca.uwaterloo.cs349.pdfreader.Actions.DrawLine;
+import ca.uwaterloo.cs349.pdfreader.Actions.Erase;
+import ca.uwaterloo.cs349.pdfreader.DrawableObjects.DrawableObject;
+import ca.uwaterloo.cs349.pdfreader.DrawableObjects.HighlightLine;
+import ca.uwaterloo.cs349.pdfreader.DrawableObjects.SimpleLine;
 
 /**
  * sample code created by J. J. Hartmann on 11/19/2017. was used from https://git.uwaterloo.ca/cs349-public/1209/-/blob/master/08.Android/5.MVC_1/app/src/main/java/com/uwaterloo/cs349/mvc1/Model.java
@@ -16,6 +29,27 @@ public class Model extends Observable
 {
     // Private Variables
     private int pageCounter;
+    private int pagesAmount;
+
+    //new model
+    private int MAXDOSTACKSIZE = 20;
+    public ArrayList<Action> doStack = new ArrayList<>();
+    public ArrayList<Action> redoStack = new ArrayList<>();
+    public ArrayList<ArrayList<DrawableObject>> drawableObjects = new ArrayList<>();
+
+    public enum Mode{
+        DRAW,
+        HIGHLIGHT,
+        ERASE,
+        READ
+    }
+    private Mode mode = Mode.READ;
+
+    //logs
+    public final int logSize = 10;
+
+    public ArrayList<Mode> log = new ArrayList<>();
+    public ArrayList<Mode> redolog = new ArrayList<>();
 
     /**
      * Model Constructor:
@@ -23,6 +57,26 @@ public class Model extends Observable
      */
     Model() {
         pageCounter = 0;
+        drawableObjects.add(new ArrayList<DrawableObject>());
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public void switchMode(Mode mode) {
+        if (this.mode == mode){
+            this.mode = Mode.READ;
+        }
+        else {
+            this.mode = mode;
+        }
+        setChanged();
+        notifyObservers();
+    }
+
+    public ArrayList<ArrayList<DrawableObject>> getDrawableObjects() {
+        return drawableObjects;
     }
 
     /**
@@ -45,17 +99,30 @@ public class Model extends Observable
         this.pageCounter = i;
     }
 
+    public int getPagesAmount() {
+        return pagesAmount;
+    }
+
+    public void setPagesAmount(int pagesAmount) {
+        this.pagesAmount = pagesAmount;
+    }
+
     /**
      * Increment pageCounter by 1
      */
     public void incrementPageCounter()
     {
-        pageCounter++;
-        Log.d("DEMO", "Model: increment counter to " + pageCounter);
+        if (pageCounter + 1 < pagesAmount) {
+            pageCounter++;
+            if (pageCounter >= drawableObjects.size()) {
+                drawableObjects.add(new ArrayList<DrawableObject>());
+            }
+            Log.d("DEMO", "Model: increment counter to " + pageCounter);
 
-        // Observable API
-        setChanged();
-        notifyObservers();
+            // Observable API
+            setChanged();
+            notifyObservers();
+        }
     }
 
     /**
@@ -73,6 +140,56 @@ public class Model extends Observable
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void addAction(Path path){
+        switch (mode){
+            case DRAW:
+                SimpleLine sl = new SimpleLine(path);
+                DrawLine dsl = new DrawLine(sl, getPageCounter());
+                dsl.doAction(this);
+                doStack.add(dsl);
+                break;
+            case HIGHLIGHT:
+                HighlightLine hl = new HighlightLine(path);
+                DrawLine dhl = new DrawLine(hl, pageCounter);
+                dhl.doAction(this);
+                doStack.add(dhl);
+                break;
+            case ERASE:
+                ArrayList<DrawableObject> toDelete = new ArrayList<>();
+                for (DrawableObject drawableObject: drawableObjects.get(getPageCounter())){
+                    if (drawableObject.intersects(path))
+                        toDelete.add(drawableObject);
+                }
+                Erase erase = new Erase(toDelete, getPageCounter());
+                erase.doAction(this);
+                doStack.add(erase);
+
+                break;
+        }
+        redoStack.clear();
+        while (doStack.size() > MAXDOSTACKSIZE)
+            doStack.remove(0);
+    }
+
+
+    public void undoClicked(){
+        if (!doStack.isEmpty()) {
+            Action action = doStack.get(doStack.size() - 1);
+            action.undoAction(this);
+            doStack.remove(doStack.size() - 1);
+            redoStack.add(action);
+        }
+    }
+
+    public void redoClicked(){
+        if (!redoStack.isEmpty()) {
+            Action action = redoStack.get(redoStack.size() - 1);
+            action.doAction(this);
+            redoStack.remove(redoStack.size() - 1);
+            doStack.add(action);
+        }
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //
