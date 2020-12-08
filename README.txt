@@ -1,0 +1,20 @@
+- Author: Aleksandr Barinov
+- openjdk version "11.0.8" 2020-07-14
+- OS:
+  - NAME="Ubuntu"
+  - VERSION="18.04.5 LTS (Bionic Beaver)"
+- Android sdk version 11.0(R)
+- app was tested on Meizu 16 android version 8.1.0 (had troubles with virtualization on ubuntu 18.04)
+- Supported functionality:
+  - gestures:
+    - change pages (scroll)
+    - move page (grab a page and move)
+    - reducing page to it's basic size and returning it to the center (double tap)
+    - zoom (with two fingers)
+  - buttons:
+    - undo (up to ten actions)
+    - redo (up to ten actions) 
+    - draw (thin line)
+    - highlight (HL) (thick transparent line)
+    - erase (delete everything that intersects with the shape created by user)
+
