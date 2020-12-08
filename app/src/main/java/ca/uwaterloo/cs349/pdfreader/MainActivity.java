@@ -13,9 +13,8 @@ import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private PdfRenderer.Page currentPage;
 
     // custom ImageView class that captures strokes and draws them over the image
-    private LinearLayout layout;
+    private LinearLayout pdflayout;
     private PDFimage pageImage;
     private TextView titleView;
     private TextView pageView;
@@ -67,13 +66,6 @@ public class MainActivity extends AppCompatActivity {
     private GestureDetector gestureDetector;
     private boolean scrolled = false;
 
-    //buttons
-    private Button drawbutton;
-    private Button highlightbutton;
-    private Button erasebutton;
-    private int on = Color.WHITE;
-    private int off = Color.BLACK;
-
     //screen size
     private int screenwidth;
     private int screenheight;
@@ -93,17 +85,18 @@ public class MainActivity extends AppCompatActivity {
         screenwidth = metrics.widthPixels;
         screenheight = metrics.heightPixels;
 
-        layout = findViewById(R.id.pdfLayout);
+        pdflayout = findViewById(R.id.pdfLayout);
 
         pageImage = new PDFimage(this, model);
-        layout.addView(pageImage);
-        layout.setEnabled(true);
+        pdflayout.addView(pageImage);
+        pdflayout.setEnabled(true);
         pageImage.setMinimumWidth(screenwidth);
         pageImage.setMinimumHeight(screenheight);
 
-        drawbutton = findViewById(R.id.drawbutton);
-        highlightbutton = findViewById(R.id.highlightbutton);
-        erasebutton = findViewById(R.id.erasebutton);
+
+        ButtonView buttonView = new ButtonView(this, model);
+        ViewGroup buttonViewGroup = (ViewGroup) findViewById(R.id.buttonViewGroup);
+        buttonViewGroup.addView(buttonView);
 
         // open page 0 of the PDF
         // it will be displayed as an image in the pageImage (above)
@@ -180,38 +173,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         }
-
-    }
-
-    private void switchButtons(View view){
-        drawbutton.setTextColor(off);
-        highlightbutton.setTextColor(off);
-        erasebutton.setTextColor(off);
-        if (model.getMode() != Model.Mode.READ)
-            ((Button) view).setTextColor(on);
-    }
-
-    public void draw(View view){
-        model.switchMode(Model.Mode.DRAWLINE);
-        switchButtons(view);
-    }
-
-    public void highlight(View view){
-        model.switchMode(Model.Mode.HIGHLIGHT);
-        switchButtons(view);
-    }
-
-    public void erase(View view){
-        model.switchMode(Model.Mode.ERASE);
-        switchButtons(view);
-    }
-
-    public void undo(View view){
-        model.undoClicked();
-    }
-
-    public void redo(View view){
-        model.redoClicked();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

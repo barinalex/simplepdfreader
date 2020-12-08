@@ -22,52 +22,11 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/buttonLayout"
-            android:layout_width="match_parent"
+            android:id="@+id/buttonViewGroup"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimaryDark"
             android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/undobutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="undo"
-                android:text="Undo" />
-
-            <Button
-                android:id="@+id/redobutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="redo"
-                android:text="Redo" />
-
-            <Button
-                android:id="@+id/drawbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="draw"
-                android:text="Draw" />
-
-            <Button
-                android:id="@+id/highlightbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="highlight"
-                android:text="HL" />
-
-            <Button
-                android:id="@+id/erasebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="erase"
-                android:text="Erase" />
-        </LinearLayout>>
+        </LinearLayout>
         <RelativeLayout
             android:id="@+id/dataLayout"
             android:layout_width="match_parent"
@@ -96,7 +55,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-
         </LinearLayout>>
     </LinearLayout>
 

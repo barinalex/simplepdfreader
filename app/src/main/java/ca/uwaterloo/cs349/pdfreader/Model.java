@@ -105,8 +105,8 @@ public class Model extends Observable
             Log.d("DEMO", "Model: increment counter to " + pageCounter);
 
             // Observable API
-            setChanged();
-            notifyObservers();
+            //setChanged();
+            //notifyObservers();
         }
     }
 
@@ -120,8 +120,8 @@ public class Model extends Observable
             Log.d("DEMO", "Model: increment counter to " + pageCounter);
 
             // Observable API
-            setChanged();
-            notifyObservers();
+            //setChanged();
+            //notifyObservers();
         }
     }
 
