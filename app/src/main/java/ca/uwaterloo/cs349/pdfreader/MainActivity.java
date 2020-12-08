@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void draw(View view){
-        model.switchMode(Model.Mode.DRAW);
+        model.switchMode(Model.Mode.DRAWLINE);
         switchButtons(view);
     }
 

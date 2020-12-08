@@ -1,6 +1,5 @@
 package ca.uwaterloo.cs349.pdfreader;
 
-import android.graphics.Path;
 import android.os.Build;
 import android.util.Log;
 
@@ -14,7 +13,9 @@ import ca.uwaterloo.cs349.pdfreader.Actions.Action;
 import ca.uwaterloo.cs349.pdfreader.Actions.DrawLine;
 import ca.uwaterloo.cs349.pdfreader.Actions.Erase;
 import ca.uwaterloo.cs349.pdfreader.DrawableObjects.DrawableObject;
+import ca.uwaterloo.cs349.pdfreader.DrawableObjects.EraseShape;
 import ca.uwaterloo.cs349.pdfreader.DrawableObjects.HighlightLine;
+import ca.uwaterloo.cs349.pdfreader.DrawableObjects.PathBased;
 import ca.uwaterloo.cs349.pdfreader.DrawableObjects.SimpleLine;
 
 /**
@@ -32,13 +33,14 @@ public class Model extends Observable
     private int pagesAmount;
 
     //new model
+    private DrawableObject newDrawableObject = null;
     private int MAXDOSTACKSIZE = 20;
     public ArrayList<Action> doStack = new ArrayList<>();
     public ArrayList<Action> redoStack = new ArrayList<>();
     public ArrayList<ArrayList<DrawableObject>> drawableObjects = new ArrayList<>();
 
     public enum Mode{
-        DRAW,
+        DRAWLINE,
         HIGHLIGHT,
         ERASE,
         READ
@@ -64,16 +66,6 @@ public class Model extends Observable
         return mode;
     }
 
-    public void switchMode(Mode mode) {
-        if (this.mode == mode){
-            this.mode = Mode.READ;
-        }
-        else {
-            this.mode = mode;
-        }
-        setChanged();
-        notifyObservers();
-    }
 
     public ArrayList<ArrayList<DrawableObject>> getDrawableObjects() {
         return drawableObjects;
@@ -88,23 +80,16 @@ public class Model extends Observable
         return pageCounter;
     }
 
-    /**
-     * Set pageCounter Value
-     * @param i
-     * -- Value to set Counter
-     */
-    public void setPageCounter(int i)
-    {
-        Log.d("DEMO", "Model: set counter to " + pageCounter);
-        this.pageCounter = i;
-    }
-
     public int getPagesAmount() {
         return pagesAmount;
     }
 
     public void setPagesAmount(int pagesAmount) {
         this.pagesAmount = pagesAmount;
+    }
+
+    public DrawableObject getNewDrawableObject() {
+        return newDrawableObject;
     }
 
     /**
@@ -140,31 +125,39 @@ public class Model extends Observable
         }
     }
 
+    public void switchMode(Mode mode) {
+        if (this.mode == mode){
+            this.mode = Mode.READ;
+        }
+        else {
+            this.mode = mode;
+        }
+        setChanged();
+        notifyObservers();
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void addAction(Path path){
+    public void addAction(DrawableObject newDrawableObject){
         switch (mode){
-            case DRAW:
-                SimpleLine sl = new SimpleLine(path);
-                DrawLine dsl = new DrawLine(sl, getPageCounter());
+            case DRAWLINE:
+                DrawLine dsl = new DrawLine((SimpleLine)newDrawableObject, pageCounter);
                 dsl.doAction(this);
                 doStack.add(dsl);
                 break;
             case HIGHLIGHT:
-                HighlightLine hl = new HighlightLine(path);
-                DrawLine dhl = new DrawLine(hl, pageCounter);
+                DrawLine dhl = new DrawLine((HighlightLine)newDrawableObject, pageCounter);
                 dhl.doAction(this);
                 doStack.add(dhl);
                 break;
             case ERASE:
                 ArrayList<DrawableObject> toDelete = new ArrayList<>();
-                for (DrawableObject drawableObject: drawableObjects.get(getPageCounter())){
-                    if (drawableObject.intersects(path))
+                for (DrawableObject drawableObject: drawableObjects.get(pageCounter)){
+                    if (drawableObject instanceof PathBased && drawableObject.intersects(newDrawableObject))
                         toDelete.add(drawableObject);
                 }
-                Erase erase = new Erase(toDelete, getPageCounter());
+                Erase erase = new Erase(toDelete, pageCounter);
                 erase.doAction(this);
                 doStack.add(erase);
-
                 break;
         }
         redoStack.clear();
@@ -172,6 +165,30 @@ public class Model extends Observable
             doStack.remove(0);
     }
 
+    public void initializeObject(float x, float y){
+        switch (mode){
+            case DRAWLINE:
+                newDrawableObject = new SimpleLine();
+                break;
+            case HIGHLIGHT:
+                newDrawableObject = new HighlightLine();
+                break;
+            case ERASE:
+                newDrawableObject = new EraseShape();
+                break;
+        }
+        newDrawableObject.initialize(x,y);
+    }
+
+    public void changeObject(float x, float y){
+        newDrawableObject.change(x, y);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void finishObject(){
+        addAction(newDrawableObject);
+        newDrawableObject = null;
+    }
 
     public void undoClicked(){
         if (!doStack.isEmpty()) {
