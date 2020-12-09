@@ -43,15 +43,10 @@ public class Model extends Observable
         DRAWLINE,
         HIGHLIGHT,
         ERASE,
+        TOOLS,
         READ
     }
     private Mode mode = Mode.READ;
-
-    //logs
-    public final int logSize = 10;
-
-    public ArrayList<Mode> log = new ArrayList<>();
-    public ArrayList<Mode> redolog = new ArrayList<>();
 
     /**
      * Model Constructor:
@@ -125,12 +120,12 @@ public class Model extends Observable
         }
     }
 
-    public void switchMode(Mode mode) {
-        if (this.mode == mode){
-            this.mode = Mode.READ;
+    public void switchMode(Mode m) {
+        if (mode == m || (m == Mode.TOOLS && mode != Mode.READ)){
+            mode = Mode.READ;
         }
         else {
-            this.mode = mode;
+            mode = m;
         }
         setChanged();
         notifyObservers();

@@ -4,11 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.myapplication.MainActivity">
     <!-- Settings, should always be in the overflow -->
-    <item android:id="@+id/undo"
-        android:title="undo"
-        app:showAsAction="never"/>
-    <item android:id="@+id/redo"
-        android:title="redo"
+    <item android:id="@+id/tools"
+        android:title="tools"
         app:showAsAction="never"/>
     <item android:id="@+id/settings"
         android:title="settings"

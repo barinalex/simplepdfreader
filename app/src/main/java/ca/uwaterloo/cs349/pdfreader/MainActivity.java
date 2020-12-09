@@ -14,10 +14,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     // custom ImageView class that captures strokes and draws them over the image
     private LinearLayout pdflayout;
     private PDFimage pageImage;
-    private TextView toolbarTextView;
 
     //last touch coordinates;
     private float prevX;
@@ -71,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     private int screenwidth;
     private int screenheight;
 
+    ViewGroup tools;
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(FILENAME);
 
         model = new Model();
 
@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         pdflayout = findViewById(R.id.pdfLayout);
 
+
         pageImage = new PDFimage(this, model);
         pdflayout.addView(pageImage);
         pdflayout.setEnabled(true);
@@ -100,8 +101,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         ButtonView buttonView = new ButtonView(this, model);
-        ViewGroup buttonViewGroup = (ViewGroup) findViewById(R.id.buttonViewGroup);
-        buttonViewGroup.addView(buttonView);
+        tools = (ViewGroup) findViewById(R.id.buttonViewGroup);
+        tools.addView(buttonView);
 
         // open page 0 of the PDF
         // it will be displayed as an image in the pageImage (above)
@@ -114,11 +115,9 @@ public class MainActivity extends AppCompatActivity {
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
         gestureDetector = new GestureDetector(this, new MyGestureListener());
 
-
-        toolbarTextView = findViewById(R.id.toolbarTextView);
-        toolbarTextView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
-
         model.setPagesAmount(pdfRenderer.getPageCount());
+        getSupportActionBar().setTitle(FILENAME + " (" + (model.getPageCounter() + 1) + "/" + model.getPagesAmount() + ")");
+
         model.initObservers();
     }
 
@@ -138,12 +137,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         switch (id){
-            case R.id.undo:
-                model.undoClicked();
-                break;
-            case R.id.redo:
-                model.redoClicked();
-                break;
+            case R.id.tools:
+                model.switchMode(Model.Mode.TOOLS);
             case R.id.settings:
                 break;
         }
@@ -202,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                     startTime = System.currentTimeMillis();
                     scrolled = true;
                 }
-                toolbarTextView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
+                getSupportActionBar().setTitle(FILENAME + " (" + (model.getPageCounter() + 1) + "/" + model.getPagesAmount() + ")");
             }
             return true;
         }

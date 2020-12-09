@@ -81,7 +81,11 @@ public class ButtonView extends LinearLayout implements Observer{
             case ERASE:
                 erasebutton.setTextColor(on);
                 break;
+            case TOOLS:
+                this.setVisibility(VISIBLE);
+                break;
             case READ:
+                this.setVisibility(GONE);
                 break;
         }
     }
