@@ -2,7 +2,6 @@ package ca.uwaterloo.cs349.pdfreader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.pdf.PdfRenderer;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +10,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,8 +48,7 @@ public class MainActivity extends AppCompatActivity {
     // custom ImageView class that captures strokes and draws them over the image
     private LinearLayout pdflayout;
     private PDFimage pageImage;
-    private TextView titleView;
-    private TextView pageView;
+    private TextView toolbarTextView;
 
     //last touch coordinates;
     private float prevX;
@@ -75,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(FILENAME);
 
         model = new Model();
 
@@ -109,13 +114,41 @@ public class MainActivity extends AppCompatActivity {
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
         gestureDetector = new GestureDetector(this, new MyGestureListener());
 
-        titleView = findViewById(R.id.title);
-        titleView.setText(FILENAME);
-        pageView = findViewById(R.id.page);
-        pageView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
+
+        toolbarTextView = findViewById(R.id.toolbarTextView);
+        toolbarTextView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
 
         model.setPagesAmount(pdfRenderer.getPageCount());
         model.initObservers();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        switch (id){
+            case R.id.undo:
+                model.undoClicked();
+                break;
+            case R.id.redo:
+                model.redoClicked();
+                break;
+            case R.id.settings:
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -169,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
                     startTime = System.currentTimeMillis();
                     scrolled = true;
                 }
-                pageView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
+                toolbarTextView.setText((model.getPageCounter() + 1) + "/" + pdfRenderer.getPageCount());
             }
             return true;
         }
